@@ -29,3 +29,10 @@ The tracker runs automatically.
 
 ## Requirements
 - FFXIVMinion (64-bit)
+
+## Changelog
+### v2.0
+- **Added Detailed Tooltip**: Hovering over the bar now shows detailed stats (Rates, Drawdown, Profit History).
+- **Added Reset Functionality**: Right-click the bar to reset session stats.
+- **UI Improvements**: Optimized padding, colors, and layout for better readability.
+- **Extended History**: Now tracks up to 12 hours of profit history.
