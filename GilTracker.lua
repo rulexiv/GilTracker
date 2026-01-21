@@ -1,4 +1,4 @@
--- Gil Tracker Addon (Optimized)
+-- Gil Tracker Addon
 -- Localizing globals for performance
 local GUI = GUI
 local Inventory = Inventory
@@ -185,16 +185,15 @@ function GilTracker.Draw(event, tick)
         end
     end
 
-    -- Fixed Bar Mode Logic
+    -- Fixed Window Setup
     local sw, sh = GUI:GetScreenSize()
     local barHeight = 15
-    local barWidth = 175 -- Adjusted width to be centered
+    local barWidth = 175
     
-    -- Position at bottom right of screen
+    -- Position at bottom right
     GUI:SetNextWindowPos(sw - barWidth, sh - barHeight, GUI.SetCond_Always)
     GUI:SetNextWindowSize(barWidth, barHeight, GUI.SetCond_Always)
     
-    -- Flags to make it look like a static bar
     local flags = 0
     if (GUI.WindowFlags_NoTitleBar)       then flags = flags + GUI.WindowFlags_NoTitleBar end
     if (GUI.WindowFlags_NoResize)         then flags = flags + GUI.WindowFlags_NoResize end
@@ -203,21 +202,17 @@ function GilTracker.Draw(event, tick)
     if (GUI.WindowFlags_NoScrollbar)      then flags = flags + GUI.WindowFlags_NoScrollbar end
     if (GUI.WindowFlags_NoSavedSettings)  then flags = flags + GUI.WindowFlags_NoSavedSettings end
 
-    -- Eliminate Window Padding for compact look
-    GUI:PushStyleVar(GUI.StyleVar_WindowPadding, 5, 0) -- 5px left/right, 0px top/bottom
-    GUI:PushStyleVar(GUI.StyleVar_WindowMinSize, 1, 1) -- Allow small windows
+    GUI:PushStyleVar(GUI.StyleVar_WindowPadding, 5, 5)
+    GUI:PushStyleVar(GUI.StyleVar_WindowMinSize, 1, 1)
 
-    -- Begin Fixed Window
-    -- Note: We pass 'true' for open to avoid the X button logic interfering, 
-    -- as we control visibility via the main Draw event check.
     if (GUI:Begin("GilTrackerFixedBar###GilTrackerFixed", true, flags)) then
-        -- Create an invisible button covering the entire window for context menu
+        -- Invisible button for context menu
         GUI:SetCursorPos(0, 0)
         GUI:InvisibleButton("##GilTrackerClickArea", barWidth, barHeight)
         if (GUI:IsItemClicked(1)) then
             GilTracker.openContextMenu = true
         end
-        GUI:SetCursorPos(0, 0) -- Reset cursor to draw content over the button
+        GUI:SetCursorPos(0, 0)
         
         local isHovered = GUI:IsWindowHovered() or GUI:IsItemHovered()
 
@@ -320,7 +315,7 @@ function GilTracker.Draw(event, tick)
     GUI:End()
     GUI:PopStyleVar(2) -- Pop WindowPadding and WindowMinSize
 
-    -- Context Menu (Defined outside ID stack of the fixed bar)
+    -- Context Menu
     if (GilTracker.openContextMenu) then
         GUI:OpenPopup("GilTrackerContextMenu")
         GilTracker.openContextMenu = false
@@ -330,15 +325,11 @@ function GilTracker.Draw(event, tick)
     GUI:PushStyleVar(GUI.StyleVar_WindowBorderSize, 0)
     GUI:PushStyleColor(GUI.Col_PopupBg, 0.15, 0.15, 0.15, 0.95) -- Slightly lighter dark background like Console
     if (GUI:BeginPopup("GilTrackerContextMenu")) then
-        GUI:Dummy(120, 1) -- Force minimum width without visible element
-        
         GUI:PushStyleColor(GUI.Col_Text, 1, 1, 1, 1)
         if (GUI:MenuItem("Reset Tracker")) then
             GilTracker.Reset()
         end
         GUI:PopStyleColor(1)
-        
-        GUI:Dummy(0, 5) -- Add padding at bottom
         GUI:EndPopup()
     end
     GUI:PopStyleColor(1)
@@ -347,4 +338,3 @@ end
 
 -- Register Event
 RegisterEventHandler("Gameloop.Draw", GilTracker.Draw, "GilTracker_Draw")
--- Remove debug prints for final version
