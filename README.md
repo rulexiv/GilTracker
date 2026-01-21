@@ -13,7 +13,7 @@ A minimalistic, high-performance Gil tracking addon for FFXIVMinion that sits un
 ## Installation
 1. Copy the `GilTracker` folder to your FFXIVMinion LuaMods directory:
    `C:\MINIONAPP\Bots\FFXIVMinion64\LuaMods\`
-2. In the Minion menu, go to **Lua Mods** > **Reload Lua**.
+2. In the Minion menu, go to **Reload Lua**.
 3. The tracked bar will appear at the bottom right of the game window.
 
 ## Usage
