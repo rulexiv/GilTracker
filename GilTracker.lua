@@ -18,6 +18,21 @@ GilTracker.startGil = 0
 GilTracker.startTime = 0
 GilTracker.currentGil = 0
 
+-- Statistics
+GilTracker.stats = {
+    maxGil = 0,
+    minGil = 0,
+    maxDrawdown = 0,
+    maxDrawup = 0,
+    hourlyRate = 0,
+    dailyRate = 0
+}
+
+-- History for Graph (Store profit diff every hour)
+GilTracker.history = {} 
+GilTracker.historyLimit = 24
+GilTracker.lastHistoryUpdate = 0
+
 -- Performance: Cache for display strings to avoid formatting every frame
 GilTracker.cache = {
     time = "00:00:00",
@@ -34,6 +49,30 @@ function GilTracker.GetGil()
         return Inventory:GetCurrencyCountByID(1)
     end
     return 0
+end
+
+function GilTracker.Reset()
+    local currentGil = GilTracker.GetGil()
+    if (currentGil > 0) then
+        GilTracker.startGil = currentGil
+        GilTracker.currentGil = currentGil
+        GilTracker.startTime = os.time()
+        
+        -- Reset Statistics
+        GilTracker.stats.maxGil = currentGil
+        GilTracker.stats.minGil = currentGil
+        GilTracker.stats.maxDrawdown = 0
+        GilTracker.stats.maxDrawup = 0
+        GilTracker.stats.hourlyRate = 0
+        GilTracker.stats.dailyRate = 0
+        
+        -- Reset History
+        GilTracker.history = { 0 }
+        GilTracker.lastHistoryUpdate = os.time()
+        
+        -- Update cache
+        GilTracker.UpdateData()
+    end
 end
 
 function GilTracker.FormatNumber(n)
@@ -59,8 +98,10 @@ function GilTracker.UpdateData()
         GilTracker.currentGil = cGil
     end
 
+    local now = os.time()
+    local elapsed = now - GilTracker.startTime
+    
     -- Calculate Time
-    local elapsed = os.time() - GilTracker.startTime
     GilTracker.cache.time = GilTracker.FormatTime(elapsed)
 
     -- Calculate Diff
@@ -73,6 +114,45 @@ function GilTracker.UpdateData()
 
     GilTracker.cache.current = GilTracker.FormatNumber(GilTracker.currentGil)
     
+    -- Update Stats
+    if (GilTracker.stats.maxGil == 0 or GilTracker.currentGil > GilTracker.stats.maxGil) then
+        GilTracker.stats.maxGil = GilTracker.currentGil
+    end
+    if (GilTracker.stats.minGil == 0 or GilTracker.currentGil < GilTracker.stats.minGil) then
+        GilTracker.stats.minGil = GilTracker.currentGil
+    end
+
+    local drawdown = GilTracker.stats.maxGil - GilTracker.currentGil
+    if (drawdown > GilTracker.stats.maxDrawdown) then
+        GilTracker.stats.maxDrawdown = drawdown
+    end
+
+    local drawup = GilTracker.currentGil - GilTracker.stats.minGil
+    if (drawup > GilTracker.stats.maxDrawup) then
+        GilTracker.stats.maxDrawup = drawup
+    end
+
+    -- Rates
+    if (elapsed > 0) then
+        GilTracker.stats.hourlyRate = math.floor(diff / (elapsed / 3600))
+        GilTracker.stats.dailyRate = math.floor(diff / (elapsed / 86400))
+    end
+
+    -- History Update (Every 1 hour = 3600 seconds)
+    -- Initialize history if empty
+    if (#GilTracker.history == 0) then
+        table.insert(GilTracker.history, 0)
+        GilTracker.lastHistoryUpdate = now
+    end
+
+    if (now - GilTracker.lastHistoryUpdate >= 3600) then
+        table.insert(GilTracker.history, diff)
+        if (#GilTracker.history > GilTracker.historyLimit) then
+            table.remove(GilTracker.history, 1)
+        end
+        GilTracker.lastHistoryUpdate = now
+    end
+
     return cGil
 end
 
@@ -92,6 +172,7 @@ function GilTracker.Draw(event, tick)
                 GilTracker.currentGil = currentGil
                 GilTracker.startTime = os.time()
                 GilTracker.initialized = true
+
                 -- Initial update of cache
                 GilTracker.UpdateData()
             end
@@ -130,6 +211,14 @@ function GilTracker.Draw(event, tick)
     -- Note: We pass 'true' for open to avoid the X button logic interfering, 
     -- as we control visibility via the main Draw event check.
     if (GUI:Begin("GilTrackerFixedBar###GilTrackerFixed", true, flags)) then
+        -- Context Menu for Reset
+        if (GUI:BeginPopupContextItem("GilTrackerContextMenu")) then
+            if (GUI:Selectable("Reset Tracker")) then
+                GilTracker.Reset()
+            end
+            GUI:EndPopup()
+        end
+
         local now = os.clock()
         
         -- Initialization Logic
@@ -143,6 +232,7 @@ function GilTracker.Draw(event, tick)
                     GilTracker.currentGil = currentGil
                     GilTracker.startTime = os.time()
                     GilTracker.initialized = true
+
                     GilTracker.UpdateData()
                 end
             end
@@ -156,9 +246,6 @@ function GilTracker.Draw(event, tick)
             end
             
             -- Draw Content
-            -- Use AlignTextToFramePadding to center vertically if height allows, 
-            -- but with 20px height and standard font, it should be fine.
-            
             -- Time
             GUI:Text(GilTracker.cache.time)
             
@@ -175,9 +262,57 @@ function GilTracker.Draw(event, tick)
             else 
                 GUI:Text(GilTracker.cache.change) 
             end
-            
-            -- Optional: Add hourly/daily stats if there is room?
-            -- For now keeping it simple as per request.
+
+            -- Tooltip on Hover
+            if (GUI:IsWindowHovered()) then
+                GUI:BeginTooltip()
+                GUI:TextColored(1, 0.8, 0.2, 1, "Gil Tracker Details")
+                GUI:Separator()
+                
+                local colWidth = 115 -- Width for tight right alignment
+
+                -- Session Stats
+                GUI:Text("Session Start:") GUI:SameLine(colWidth) GUI:Text(GilTracker.FormatNumber(GilTracker.startGil))
+                GUI:Text("Current Gil:")   GUI:SameLine(colWidth) GUI:Text(GilTracker.cache.current)
+                GUI:Text("Total Profit:")  GUI:SameLine(colWidth) 
+                if (d > 0) then GUI:TextColored(0, 1, 0, 1, GilTracker.cache.change)
+                elseif (d < 0) then GUI:TextColored(1.0, 0.4, 0.7, 1, GilTracker.cache.change)
+                else GUI:Text(GilTracker.cache.change) end
+                
+                GUI:Separator()
+                
+                -- Rates
+                GUI:Text("Hourly Rate:")   GUI:SameLine(colWidth) GUI:Text(GilTracker.FormatNumber(GilTracker.stats.hourlyRate) .. " /h")
+                GUI:Text("Daily Rate:")    GUI:SameLine(colWidth) GUI:Text(GilTracker.FormatNumber(GilTracker.stats.dailyRate) .. " /d")
+                
+                GUI:Separator()
+                
+                -- Volatility (Swapped Up/Down)
+                GUI:Text("Max Drawup:")    GUI:SameLine(colWidth) GUI:TextColored(0.4, 1, 0.4, 1, GilTracker.FormatNumber(GilTracker.stats.maxDrawup))
+                GUI:Text("Max Drawdown:")  GUI:SameLine(colWidth) GUI:TextColored(1.0, 0.4, 0.7, 1, GilTracker.FormatNumber(GilTracker.FormatNumber(GilTracker.stats.maxDrawdown)))
+                
+                GUI:Separator()
+                
+                -- History (Text List)
+                GUI:Text("Profit History (Last 12h)")
+                if (#GilTracker.history > 0) then
+                    local count = #GilTracker.history
+                    local start = math.max(1, count - 11) -- Show last 12
+                    for i = count, start, -1 do
+                        local val = GilTracker.history[i]
+                        local prefix = (val > 0 and "+") or ""
+                        local color = (val > 0 and {0,1,0,1}) or (val < 0 and {1.0, 0.4, 0.7, 1}) or {1,1,1,1}
+                        
+                        GUI:Text(string.format("%2dh ago:", count - i))
+                        GUI:SameLine(colWidth)
+                        GUI:TextColored(color[1], color[2], color[3], color[4], prefix .. GilTracker.FormatNumber(val))
+                    end
+                else
+                    GUI:Text("No history data yet...")
+                end
+                
+                GUI:EndTooltip()
+            end
         end
     end
     GUI:End()
