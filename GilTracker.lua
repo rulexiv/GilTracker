@@ -253,7 +253,7 @@ function GilTracker.Draw(event, tick)
             -- Change (Colored)
             local d = GilTracker.cache.diff
             if (d > 0) then 
-                GUI:TextColored(0, 1, 0, 1, GilTracker.cache.change)
+                GUI:TextColored(0.4, 1, 0.4, 1, GilTracker.cache.change)
             elseif (d < 0) then 
                 GUI:TextColored(1.0, 0.4, 0.7, 1, GilTracker.cache.change)
             else 
@@ -272,7 +272,7 @@ function GilTracker.Draw(event, tick)
                 GUI:Text("Session Start:") GUI:SameLine(colWidth) GUI:Text(GilTracker.FormatNumber(GilTracker.startGil))
                 GUI:Text("Current Gil:")   GUI:SameLine(colWidth) GUI:Text(GilTracker.cache.current)
                 GUI:Text("Total Profit:")  GUI:SameLine(colWidth) 
-                if (d > 0) then GUI:TextColored(0, 1, 0, 1, GilTracker.cache.change)
+                if (d > 0) then GUI:TextColored(0.4, 1, 0.4, 1, GilTracker.cache.change)
                 elseif (d < 0) then GUI:TextColored(1.0, 0.4, 0.7, 1, GilTracker.cache.change)
                 else GUI:Text(GilTracker.cache.change) end
                 
@@ -298,7 +298,7 @@ function GilTracker.Draw(event, tick)
                     for i = count, start, -1 do
                         local val = GilTracker.history[i]
                         local prefix = (val > 0 and "+") or ""
-                        local color = (val > 0 and {0,1,0,1}) or (val < 0 and {1.0, 0.4, 0.7, 1}) or {1,1,1,1}
+                        local color = (val > 0 and {0.4, 1, 0.4, 1}) or (val < 0 and {1.0, 0.4, 0.7, 1}) or {1,1,1,1}
                         
                         GUI:Text(string.format("%2dh ago:", count - i))
                         GUI:SameLine(colWidth)
