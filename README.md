@@ -7,7 +7,7 @@ A minimalistic, high-performance Gil tracking addon for FFXIVMinion that sits un
 - **Session Tracking**: Displays session duration and net Gil change.
 - **Visual Indicators**:
   - Green for Gil increase.
-  - Pink for Gil decrease (High visibility).
+  - Pink for Gil decrease.
 - **Performance Optimized**: Updates once per second with minimal CPU footprint.
 
 ## Installation
