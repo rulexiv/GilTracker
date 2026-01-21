@@ -215,21 +215,10 @@ function GilTracker.Draw(event, tick)
         GUI:SetCursorPos(0, 0)
         GUI:InvisibleButton("##GilTrackerClickArea", barWidth, barHeight)
         if (GUI:IsItemClicked(1)) then
-            GUI:OpenPopup("GilTrackerContextMenu")
+            GilTracker.openContextMenu = true
         end
         GUI:SetCursorPos(0, 0) -- Reset cursor to draw content over the button
         
-        -- Context Menu for Reset
-        GUI:PushStyleVar(GUI.StyleVar_WindowPadding, 8, 8)
-        GUI:PushStyleVar(GUI.StyleVar_WindowMinSize, 120, 40) -- Ensure enough size
-        if (GUI:BeginPopup("GilTrackerContextMenu")) then
-            if (GUI:Selectable("Reset Tracker")) then
-                GilTracker.Reset()
-            end
-            GUI:EndPopup()
-        end
-        GUI:PopStyleVar(2)
-
         local isHovered = GUI:IsWindowHovered() or GUI:IsItemHovered()
 
         local now = os.clock()
@@ -277,7 +266,7 @@ function GilTracker.Draw(event, tick)
             end
 
             -- Tooltip on Hover
-            if (isHovered) then
+            if (isHovered and not GUI:IsPopupOpen("GilTrackerContextMenu")) then
                 GUI:BeginTooltip()
                 GUI:TextColored(1, 0.8, 0.2, 1, "Gil Tracker Details")
                 GUI:Separator()
@@ -330,6 +319,30 @@ function GilTracker.Draw(event, tick)
     end
     GUI:End()
     GUI:PopStyleVar(2) -- Pop WindowPadding and WindowMinSize
+
+    -- Context Menu (Defined outside ID stack of the fixed bar)
+    if (GilTracker.openContextMenu) then
+        GUI:OpenPopup("GilTrackerContextMenu")
+        GilTracker.openContextMenu = false
+    end
+
+    GUI:PushStyleVar(GUI.StyleVar_WindowPadding, 5, 5)
+    GUI:PushStyleVar(GUI.StyleVar_WindowBorderSize, 0)
+    GUI:PushStyleColor(GUI.Col_PopupBg, 0.15, 0.15, 0.15, 0.95) -- Slightly lighter dark background like Console
+    if (GUI:BeginPopup("GilTrackerContextMenu")) then
+        GUI:Dummy(120, 1) -- Force minimum width without visible element
+        
+        GUI:PushStyleColor(GUI.Col_Text, 1, 1, 1, 1)
+        if (GUI:MenuItem("Reset Tracker")) then
+            GilTracker.Reset()
+        end
+        GUI:PopStyleColor(1)
+        
+        GUI:Dummy(0, 5) -- Add padding at bottom
+        GUI:EndPopup()
+    end
+    GUI:PopStyleColor(1)
+    GUI:PopStyleVar(2)
 end
 
 -- Register Event
