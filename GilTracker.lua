@@ -211,13 +211,26 @@ function GilTracker.Draw(event, tick)
     -- Note: We pass 'true' for open to avoid the X button logic interfering, 
     -- as we control visibility via the main Draw event check.
     if (GUI:Begin("GilTrackerFixedBar###GilTrackerFixed", true, flags)) then
+        -- Create an invisible button covering the entire window for context menu
+        GUI:SetCursorPos(0, 0)
+        GUI:InvisibleButton("##GilTrackerClickArea", barWidth, barHeight)
+        if (GUI:IsItemClicked(1)) then
+            GUI:OpenPopup("GilTrackerContextMenu")
+        end
+        GUI:SetCursorPos(0, 0) -- Reset cursor to draw content over the button
+        
         -- Context Menu for Reset
-        if (GUI:BeginPopupContextItem("GilTrackerContextMenu")) then
+        GUI:PushStyleVar(GUI.StyleVar_WindowPadding, 8, 8)
+        GUI:PushStyleVar(GUI.StyleVar_WindowMinSize, 120, 40) -- Ensure enough size
+        if (GUI:BeginPopup("GilTrackerContextMenu")) then
             if (GUI:Selectable("Reset Tracker")) then
                 GilTracker.Reset()
             end
             GUI:EndPopup()
         end
+        GUI:PopStyleVar(2)
+
+        local isHovered = GUI:IsWindowHovered() or GUI:IsItemHovered()
 
         local now = os.clock()
         
@@ -264,7 +277,7 @@ function GilTracker.Draw(event, tick)
             end
 
             -- Tooltip on Hover
-            if (GUI:IsWindowHovered()) then
+            if (isHovered) then
                 GUI:BeginTooltip()
                 GUI:TextColored(1, 0.8, 0.2, 1, "Gil Tracker Details")
                 GUI:Separator()
