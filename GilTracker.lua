@@ -188,7 +188,7 @@ function GilTracker.Draw(event, tick)
     -- Fixed Window Setup
     local sw, sh = GUI:GetScreenSize()
     local barHeight = 15
-    local barWidth = 175
+    local barWidth = 174
     
     -- Position at bottom right
     GUI:SetNextWindowPos(sw - barWidth, sh - barHeight, GUI.SetCond_Always)
@@ -207,12 +207,12 @@ function GilTracker.Draw(event, tick)
 
     if (GUI:Begin("GilTrackerFixedBar###GilTrackerFixed", true, flags)) then
         -- Invisible button for context menu
-        GUI:SetCursorPos(0, 0)
+        GUI:SetCursorPos(5, 5) -- Reset cursor to padding offset for content
         GUI:InvisibleButton("##GilTrackerClickArea", barWidth, barHeight)
         if (GUI:IsItemClicked(1)) then
             GilTracker.openContextMenu = true
         end
-        GUI:SetCursorPos(0, 0)
+        GUI:SetCursorPos(5, 0)
         
         local isHovered = GUI:IsWindowHovered() or GUI:IsItemHovered()
 
@@ -321,18 +321,14 @@ function GilTracker.Draw(event, tick)
         GilTracker.openContextMenu = false
     end
 
-    GUI:PushStyleVar(GUI.StyleVar_WindowPadding, 5, 5)
+    GUI:PushStyleVar(GUI.StyleVar_WindowPadding, 8, 6)
     GUI:PushStyleVar(GUI.StyleVar_WindowBorderSize, 0)
-    GUI:PushStyleColor(GUI.Col_PopupBg, 0.15, 0.15, 0.15, 0.95) -- Slightly lighter dark background like Console
     if (GUI:BeginPopup("GilTrackerContextMenu")) then
-        GUI:PushStyleColor(GUI.Col_Text, 1, 1, 1, 1)
         if (GUI:MenuItem("Reset Tracker")) then
             GilTracker.Reset()
         end
-        GUI:PopStyleColor(1)
         GUI:EndPopup()
     end
-    GUI:PopStyleColor(1)
     GUI:PopStyleVar(2)
 end
 
