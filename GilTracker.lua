@@ -23,8 +23,6 @@ GilTracker.cache = {
     time = "00:00:00",
     current = "0",
     change = "0",
-    hourly = "0",
-    daily = "0",
     diff = 0
 }
 GilTracker.lastUpdate = 0
@@ -73,14 +71,7 @@ function GilTracker.UpdateData()
     if (diff > 0) then diffStr = "+" .. diffStr end
     GilTracker.cache.change = diffStr
 
-    -- Calculate Estimates
-    local hourly = 0
-    if (elapsed > 0) then hourly = (diff / elapsed) * 3600 end
-    local daily = hourly * 24
-
     GilTracker.cache.current = GilTracker.FormatNumber(GilTracker.currentGil)
-    GilTracker.cache.hourly  = GilTracker.FormatNumber(math.floor(hourly))
-    GilTracker.cache.daily   = GilTracker.FormatNumber(math.floor(daily))
     
     return cGil
 end
@@ -88,15 +79,62 @@ end
 function GilTracker.Draw(event, tick)
     if (not GilTracker.open) then return end
 
-    GUI:SetNextWindowSize(200, 150, GUI.SetCond_FirstUseEver)
-    GilTracker.visible, GilTracker.open = GUI:Begin(GilTracker.windowName, GilTracker.open)
+    local now = os.clock()
+        
+    -- Initialization Logic (Run regardless of visibility so data is ready)
+    if (not GilTracker.initialized) then
+        -- Throttle init checks too
+        if (now - GilTracker.lastUpdate > 1.0) then 
+            GilTracker.lastUpdate = now
+            local currentGil = GilTracker.GetGil()
+            if (currentGil > 0) then
+                GilTracker.startGil = currentGil
+                GilTracker.currentGil = currentGil
+                GilTracker.startTime = os.time()
+                GilTracker.initialized = true
+                -- Initial update of cache
+                GilTracker.UpdateData()
+            end
+        end
+    else
+        -- Main Logic Throttling (Run regardless of visibility)
+        if (now - GilTracker.lastUpdate > GilTracker.updateInterval) then
+            GilTracker.lastUpdate = now
+            GilTracker.UpdateData()
+        end
+    end
+
+    -- Fixed Bar Mode Logic
+    local sw, sh = GUI:GetScreenSize()
+    local barHeight = 15
+    local barWidth = 175 -- Adjusted width to be centered
     
-    if (GilTracker.visible) then
+    -- Position at bottom right of screen
+    GUI:SetNextWindowPos(sw - barWidth, sh - barHeight, GUI.SetCond_Always)
+    GUI:SetNextWindowSize(barWidth, barHeight, GUI.SetCond_Always)
+    
+    -- Flags to make it look like a static bar
+    local flags = 0
+    if (GUI.WindowFlags_NoTitleBar)       then flags = flags + GUI.WindowFlags_NoTitleBar end
+    if (GUI.WindowFlags_NoResize)         then flags = flags + GUI.WindowFlags_NoResize end
+    if (GUI.WindowFlags_NoMove)           then flags = flags + GUI.WindowFlags_NoMove end
+    if (GUI.WindowFlags_NoCollapse)       then flags = flags + GUI.WindowFlags_NoCollapse end
+    if (GUI.WindowFlags_NoScrollbar)      then flags = flags + GUI.WindowFlags_NoScrollbar end
+    if (GUI.WindowFlags_NoSavedSettings)  then flags = flags + GUI.WindowFlags_NoSavedSettings end
+
+    -- Eliminate Window Padding for compact look
+    GUI:PushStyleVar(GUI.StyleVar_WindowPadding, 5, 0) -- 5px left/right, 0px top/bottom
+    GUI:PushStyleVar(GUI.StyleVar_WindowMinSize, 1, 1) -- Allow small windows
+
+    -- Begin Fixed Window
+    -- Note: We pass 'true' for open to avoid the X button logic interfering, 
+    -- as we control visibility via the main Draw event check.
+    if (GUI:Begin("GilTrackerFixedBar###GilTrackerFixed", true, flags)) then
         local now = os.clock()
         
         -- Initialization Logic
         if (not GilTracker.initialized) then
-            -- Throttle init checks too
+            -- Throttle init checks
             if (now - GilTracker.lastUpdate > 1.0) then 
                 GilTracker.lastUpdate = now
                 local currentGil = GilTracker.GetGil()
@@ -105,45 +143,45 @@ function GilTracker.Draw(event, tick)
                     GilTracker.currentGil = currentGil
                     GilTracker.startTime = os.time()
                     GilTracker.initialized = true
-                    -- Initial update of cache
                     GilTracker.UpdateData()
                 end
             end
             
-            if (not GilTracker.initialized) then
-                GUI:Text("Initializing...")
-            end
+            GUI:Text("Init...")
         else
             -- Main Logic Throttling
             if (now - GilTracker.lastUpdate > GilTracker.updateInterval) then
                 GilTracker.lastUpdate = now
                 GilTracker.UpdateData()
             end
-
-            -- Render using Cached Strings (Very fast)
-            GUI:Text("Time: " .. GilTracker.cache.time)
             
-            GUI:Separator()
-            GUI:Text("Current: " .. GilTracker.cache.current)
+            -- Draw Content
+            -- Use AlignTextToFramePadding to center vertically if height allows, 
+            -- but with 20px height and standard font, it should be fine.
             
-            -- Color logic is fast enough to keep here or could be cached too, but simple ifs are cheap
-            GUI:Text("Change:  ")
-            GUI:SameLine(80)
+            -- Time
+            GUI:Text(GilTracker.cache.time)
+            
+            GUI:SameLine()
+            GUI:Text(" ") -- Minimal Spacer
+            GUI:SameLine()
+            
+            -- Change (Colored)
             local d = GilTracker.cache.diff
             if (d > 0) then 
                 GUI:TextColored(0, 1, 0, 1, GilTracker.cache.change)
             elseif (d < 0) then 
-                GUI:TextColored(1, 0, 0, 1, GilTracker.cache.change)
+                GUI:TextColored(1.0, 0.4, 0.7, 1, GilTracker.cache.change)
             else 
                 GUI:Text(GilTracker.cache.change) 
             end
-
-            GUI:Separator()
-            GUI:Text("1h Est:  " .. GilTracker.cache.hourly)
-            GUI:Text("24h Est: " .. GilTracker.cache.daily)
+            
+            -- Optional: Add hourly/daily stats if there is room?
+            -- For now keeping it simple as per request.
         end
     end
     GUI:End()
+    GUI:PopStyleVar(2) -- Pop WindowPadding and WindowMinSize
 end
 
 -- Register Event
