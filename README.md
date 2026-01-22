@@ -4,10 +4,10 @@ A minimalistic, high-performance Gil tracking addon for FFXIVMinion that sits un
 
 ## Features
 - **Detailed Statistics**: Hover over the bar to see a detailed tooltip with:
-  - Session Start Gil / Current Gil
+  - Starting Gil / Current Gil
   - Total Profit
   - Hourly / Daily Rates
-  - Total Income / Total Outgo
+  - Total Income / Total Expense
   - 12-Hour History (Hourly Snapshots)
 - **Context Menu**: Right-click the bar to reset the tracker.
 - **Visual Indicators**:
@@ -32,9 +32,9 @@ The tracker runs automatically.
 
 ## Changelog
 ### v3.0
-- **Income/Outgo Tracking**: Replaced DrawDown/DrawUp with precise Total Income and Total Outgo tracking.
+- **Income/Expense Tracking**: Replaced DrawDown/DrawUp with precise Total Income and Total Expense tracking.
 - **Hourly History Snapshots**: History now records absolute Gil values at the turn of every hour for accurate delta calculation.
-- **UI Updates**: clearer labels (Starting Gil, Session Started) and color coding.
+- **UI Updates**: clearer labels (Starting Gil, Start) and color coding.
 
 ### v2.0
 - **Added Detailed Tooltip**: Hovering over the bar now shows detailed stats (Rates, Drawdown, Profit History).
