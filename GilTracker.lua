@@ -296,13 +296,19 @@ function GilTracker.Draw(event, tick)
                     local count = #GilTracker.history
                     local start = math.max(1, count - 11) -- Show last 12
                     for i = count, start, -1 do
-                        local val = GilTracker.history[i]
-                        local prefix = (val > 0 and "+") or ""
-                        local color = (val > 0 and {0.4, 1, 0.4, 1}) or (val < 0 and {1.0, 0.4, 0.7, 1}) or {1,1,1,1}
+                        local currentVal = GilTracker.history[i]
+                        local prevVal = 0
+                        if (i > 1) then
+                            prevVal = GilTracker.history[i-1]
+                        end
+                        local delta = currentVal - prevVal
+                        
+                        local prefix = (delta > 0 and "+") or ""
+                        local color = (delta > 0 and {0.4, 1, 0.4, 1}) or (delta < 0 and {1.0, 0.4, 0.7, 1}) or {1,1,1,1}
                         
                         GUI:Text(string.format("%2dh ago:", count - i))
                         GUI:SameLine(colWidth)
-                        GUI:TextColored(color[1], color[2], color[3], color[4], prefix .. GilTracker.FormatNumber(val))
+                        GUI:TextColored(color[1], color[2], color[3], color[4], prefix .. GilTracker.FormatNumber(delta))
                     end
                 else
                     GUI:Text("No history data yet...")
