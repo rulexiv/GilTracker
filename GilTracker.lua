@@ -300,7 +300,7 @@ function GilTracker.Draw(event, tick)
                 -- Volatility (Swapped Up/Down)
                 -- Volatility (Swapped: Sales/Green, Expenses/Pink)
                 GUI:Text("Total Income:")    GUI:SameLine(colWidth) GUI:TextColored(0.4, 1, 0.4, 1, GilTracker.FormatNumber(GilTracker.stats.totalIncome))
-                GUI:Text("Total Expenses:")  GUI:SameLine(colWidth) GUI:TextColored(1.0, 0.4, 0.7, 1, GilTracker.FormatNumber(GilTracker.stats.totalExpense))
+                GUI:Text("Total Outgo:")  GUI:SameLine(colWidth) GUI:TextColored(1.0, 0.4, 0.7, 1, GilTracker.FormatNumber(GilTracker.stats.totalExpense))
                 
                 GUI:Separator()
                 
