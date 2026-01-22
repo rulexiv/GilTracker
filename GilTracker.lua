@@ -30,8 +30,10 @@ GilTracker.stats = {
 
 -- History for Graph (Store profit diff every hour)
 GilTracker.history = {} 
-GilTracker.historyLimit = 24
-GilTracker.lastHistoryUpdate = 0
+GilTracker.historyLimit = 12
+GilTracker.lastRecordedHour = -1
+GilTracker.historyUpdatePending = false
+GilTracker.historyUpdateTarget = 0
 
 -- Performance: Cache for display strings to avoid formatting every frame
 GilTracker.cache = {
@@ -67,8 +69,9 @@ function GilTracker.Reset()
         GilTracker.stats.dailyRate = 0
         
         -- Reset History
-        GilTracker.history = { 0 }
-        GilTracker.lastHistoryUpdate = os.time()
+        GilTracker.history = { { time = os.time(), profit = 0 } }
+        GilTracker.lastRecordedHour = tonumber(os.date("%H"))
+        GilTracker.historyUpdatePending = false
         
         -- Update cache
         GilTracker.UpdateData()
@@ -138,19 +141,36 @@ function GilTracker.UpdateData()
         GilTracker.stats.dailyRate = math.floor(diff / (elapsed / 86400))
     end
 
-    -- History Update (Every 1 hour = 3600 seconds)
-    -- Initialize history if empty
-    if (#GilTracker.history == 0) then
-        table.insert(GilTracker.history, 0)
-        GilTracker.lastHistoryUpdate = now
+    -- History Update (Check for Hour Change)
+    local currentHour = tonumber(os.date("%H"))
+    
+    -- Initialize hour on first run
+    if (GilTracker.lastRecordedHour == -1) then
+         GilTracker.lastRecordedHour = currentHour
+         -- Init history if empty
+         if (#GilTracker.history == 0) then
+             table.insert(GilTracker.history, { time = now, profit = diff })
+         end
     end
 
-    if (now - GilTracker.lastHistoryUpdate >= 3600) then
-        table.insert(GilTracker.history, diff)
-        if (#GilTracker.history > GilTracker.historyLimit) then
-            table.remove(GilTracker.history, 1)
+    if (currentHour ~= GilTracker.lastRecordedHour) then
+        -- Hour has changed, schedule update with random delay to prevent spike across multiple clients
+        if (not GilTracker.historyUpdatePending) then
+            GilTracker.historyUpdatePending = true
+            -- Random delay between 0 and 5 seconds
+            GilTracker.historyUpdateTarget = now + (math.random(0, 5000) / 1000.0)
         end
-        GilTracker.lastHistoryUpdate = now
+        
+        if (now >= GilTracker.historyUpdateTarget) then
+            table.insert(GilTracker.history, { time = now, profit = diff })
+            if (#GilTracker.history > GilTracker.historyLimit + 1) then -- Keep one extra for delta calc
+                table.remove(GilTracker.history, 1)
+            end
+            
+            -- Commit the update
+            GilTracker.lastRecordedHour = currentHour
+            GilTracker.historyUpdatePending = false
+        end
     end
 
     return cGil
@@ -296,17 +316,26 @@ function GilTracker.Draw(event, tick)
                     local count = #GilTracker.history
                     local start = math.max(1, count - 11) -- Show last 12
                     for i = count, start, -1 do
-                        local currentVal = GilTracker.history[i]
+                        local item = GilTracker.history[i]
+                        local currentVal = item.profit
                         local prevVal = 0
+                        
+                        -- Calculate delta from previous entry if available
                         if (i > 1) then
-                            prevVal = GilTracker.history[i-1]
+                            prevVal = GilTracker.history[i-1].profit
                         end
+                        
                         local delta = currentVal - prevVal
+                        
+                        -- Skip printing the very first initialization entry (usually 0 profit) if it's the only one
+                        -- or handle it gracefully. 
                         
                         local prefix = (delta > 0 and "+") or ""
                         local color = (delta > 0 and {0.4, 1, 0.4, 1}) or (delta < 0 and {1.0, 0.4, 0.7, 1}) or {1,1,1,1}
                         
-                        GUI:Text(string.format("%2dh ago:", count - i))
+                        local timeStr = os.date("%H:%M", item.time)
+                        
+                        GUI:Text(timeStr)
                         GUI:SameLine(colWidth)
                         GUI:TextColored(color[1], color[2], color[3], color[4], prefix .. GilTracker.FormatNumber(delta))
                     end
