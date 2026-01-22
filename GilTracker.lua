@@ -17,13 +17,12 @@ GilTracker.windowName = "Gil Tracker##GilTrackerWindow"
 GilTracker.startGil = 0
 GilTracker.startTime = 0
 GilTracker.currentGil = 0
+GilTracker.prevGil = 0
 
 -- Statistics
 GilTracker.stats = {
-    maxGil = 0,
-    minGil = 0,
-    maxDrawdown = 0,
-    maxDrawup = 0,
+    totalIncome = 0,
+    totalExpense = 0,
     hourlyRate = 0,
     dailyRate = 0
 }
@@ -61,12 +60,13 @@ function GilTracker.Reset()
         GilTracker.startTime = os.time()
         
         -- Reset Statistics
-        GilTracker.stats.maxGil = currentGil
-        GilTracker.stats.minGil = currentGil
-        GilTracker.stats.maxDrawdown = 0
-        GilTracker.stats.maxDrawup = 0
+        -- Reset Statistics
+        GilTracker.stats.totalIncome = 0
+        GilTracker.stats.totalExpense = 0
         GilTracker.stats.hourlyRate = 0
         GilTracker.stats.dailyRate = 0
+        
+        GilTracker.prevGil = currentGil
         
         -- Reset History
         GilTracker.history = { { time = os.time(), profit = 0 } }
@@ -117,23 +117,14 @@ function GilTracker.UpdateData()
 
     GilTracker.cache.current = GilTracker.FormatNumber(GilTracker.currentGil)
     
-    -- Update Stats
-    if (GilTracker.stats.maxGil == 0 or GilTracker.currentGil > GilTracker.stats.maxGil) then
-        GilTracker.stats.maxGil = GilTracker.currentGil
+    -- Calculate incremental income/expense
+    local incDiff = GilTracker.currentGil - GilTracker.prevGil
+    if (incDiff > 0) then
+        GilTracker.stats.totalIncome = GilTracker.stats.totalIncome + incDiff
+    elseif (incDiff < 0) then
+        GilTracker.stats.totalExpense = GilTracker.stats.totalExpense + math.abs(incDiff)
     end
-    if (GilTracker.stats.minGil == 0 or GilTracker.currentGil < GilTracker.stats.minGil) then
-        GilTracker.stats.minGil = GilTracker.currentGil
-    end
-
-    local drawdown = GilTracker.stats.maxGil - GilTracker.currentGil
-    if (drawdown > GilTracker.stats.maxDrawdown) then
-        GilTracker.stats.maxDrawdown = drawdown
-    end
-
-    local drawup = GilTracker.currentGil - GilTracker.stats.minGil
-    if (drawup > GilTracker.stats.maxDrawup) then
-        GilTracker.stats.maxDrawup = drawup
-    end
+    GilTracker.prevGil = GilTracker.currentGil
 
     -- Rates
     if (elapsed > 0) then
@@ -190,6 +181,7 @@ function GilTracker.Draw(event, tick)
             if (currentGil > 0) then
                 GilTracker.startGil = currentGil
                 GilTracker.currentGil = currentGil
+                GilTracker.prevGil = currentGil
                 GilTracker.startTime = os.time()
                 GilTracker.initialized = true
 
@@ -247,6 +239,7 @@ function GilTracker.Draw(event, tick)
                 if (currentGil > 0) then
                     GilTracker.startGil = currentGil
                     GilTracker.currentGil = currentGil
+                    GilTracker.prevGil = currentGil
                     GilTracker.startTime = os.time()
                     GilTracker.initialized = true
 
@@ -305,8 +298,9 @@ function GilTracker.Draw(event, tick)
                 GUI:Separator()
                 
                 -- Volatility (Swapped Up/Down)
-                GUI:Text("Max Drawup:")    GUI:SameLine(colWidth) GUI:TextColored(0.4, 1, 0.4, 1, GilTracker.FormatNumber(GilTracker.stats.maxDrawup))
-                GUI:Text("Max Drawdown:")  GUI:SameLine(colWidth) GUI:TextColored(1.0, 0.4, 0.7, 1, GilTracker.FormatNumber(GilTracker.FormatNumber(GilTracker.stats.maxDrawdown)))
+                -- Volatility (Swapped: Sales/Green, Expenses/Pink)
+                GUI:Text("Total Income:")    GUI:SameLine(colWidth) GUI:TextColored(0.4, 1, 0.4, 1, GilTracker.FormatNumber(GilTracker.stats.totalIncome))
+                GUI:Text("Total Expenses:")  GUI:SameLine(colWidth) GUI:TextColored(1.0, 0.4, 0.7, 1, GilTracker.FormatNumber(GilTracker.stats.totalExpense))
                 
                 GUI:Separator()
                 
