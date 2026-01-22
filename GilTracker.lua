@@ -266,7 +266,7 @@ function GilTracker.Draw(event, tick)
             -- Change (Colored)
             local d = GilTracker.cache.diff
             if (d > 0) then 
-                GUI:TextColored(0.1, 1.0, 0.1, 1.0, GilTracker.cache.change)
+                GUI:TextColored(0.6, 1.0, 0.6, 1.0, GilTracker.cache.change)
             elseif (d < 0) then 
                 GUI:TextColored(1.0, 0.6, 0.6, 1.0, GilTracker.cache.change)
             else 
@@ -285,7 +285,7 @@ function GilTracker.Draw(event, tick)
                 GUI:Text("Starting Gil:") GUI:SameLine(colWidth) GUI:Text(GilTracker.FormatNumber(GilTracker.startGil))
                 GUI:Text("Current Gil:")   GUI:SameLine(colWidth) GUI:Text(GilTracker.cache.current)
                 GUI:Text("Total Profit:")  GUI:SameLine(colWidth) 
-                if (d > 0) then GUI:TextColored(0.1, 1.0, 0.1, 1.0, GilTracker.cache.change)
+                if (d > 0) then GUI:TextColored(0.6, 1.0, 0.6, 1.0, GilTracker.cache.change)
                 elseif (d < 0) then GUI:TextColored(1.0, 0.6, 0.6, 1.0, GilTracker.cache.change)
                 else GUI:Text(GilTracker.cache.change) end
                 
@@ -299,7 +299,7 @@ function GilTracker.Draw(event, tick)
                 
                 -- Volatility (Swapped Up/Down)
                 -- Volatility (Swapped: Sales/Green, Expenses/Pink)
-                GUI:Text("Total Income:")    GUI:SameLine(colWidth) GUI:TextColored(0.1, 1.0, 0.1, 1.0, GilTracker.FormatNumber(GilTracker.stats.totalIncome))
+                GUI:Text("Total Income:")    GUI:SameLine(colWidth) GUI:TextColored(0.6, 1.0, 0.6, 1.0, GilTracker.FormatNumber(GilTracker.stats.totalIncome))
                 GUI:Text("Total Expense:")  GUI:SameLine(colWidth) GUI:TextColored(1.0, 0.6, 0.6, 1.0, GilTracker.FormatNumber(GilTracker.stats.totalExpense))
                 
                 GUI:Separator()
@@ -326,7 +326,7 @@ function GilTracker.Draw(event, tick)
                             end
                             
                             local prefix = (delta > 0 and "+") or ""
-                            local color = (delta > 0 and {0.1, 1.0, 0.1, 1.0}) or (delta < 0 and {1.0, 0.6, 0.6, 1.0}) or {1,1,1,1}
+                            local color = (delta > 0 and {0.6, 1.0, 0.6, 1.0}) or (delta < 0 and {1.0, 0.6, 0.6, 1.0}) or {1,1,1,1}
                             GUI:TextColored(color[1], color[2], color[3], color[4], prefix .. GilTracker.FormatNumber(delta))
                         end
                     end
