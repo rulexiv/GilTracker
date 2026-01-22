@@ -49,12 +49,12 @@ function GilTracker.GetGil()
     if (Inventory) then
         return Inventory:GetCurrencyCountByID(1)
     end
-    return 0
+    return nil
 end
 
 function GilTracker.Reset()
     local currentGil = GilTracker.GetGil()
-    if (currentGil > 0) then
+    if (currentGil ~= nil) then
         GilTracker.startGil = currentGil
         GilTracker.currentGil = currentGil
         GilTracker.startTime = os.time()
@@ -81,6 +81,7 @@ end
 function GilTracker.FormatNumber(n)
     local formatted = tostring(n)
     while true do  
+        local k
         formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
         if (k==0) then break end
     end
@@ -97,7 +98,7 @@ end
 function GilTracker.UpdateData()
     -- Get current Gil
     local cGil = GilTracker.GetGil()
-    if (cGil > 0) then
+    if (cGil ~= nil) then
         GilTracker.currentGil = cGil
     end
 
@@ -178,7 +179,7 @@ function GilTracker.Draw(event, tick)
         if (now - GilTracker.lastUpdate > 1.0) then 
             GilTracker.lastUpdate = now
             local currentGil = GilTracker.GetGil()
-            if (currentGil > 0) then
+            if (currentGil ~= nil) then
                 GilTracker.startGil = currentGil
                 GilTracker.currentGil = currentGil
                 GilTracker.prevGil = currentGil
@@ -236,7 +237,7 @@ function GilTracker.Draw(event, tick)
             if (now - GilTracker.lastUpdate > 1.0) then 
                 GilTracker.lastUpdate = now
                 local currentGil = GilTracker.GetGil()
-                if (currentGil > 0) then
+                if (currentGil ~= nil) then
                     GilTracker.startGil = currentGil
                     GilTracker.currentGil = currentGil
                     GilTracker.prevGil = currentGil
