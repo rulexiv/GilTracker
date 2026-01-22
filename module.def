@@ -1,6 +1,6 @@
 [Module]
 Name = GilTracker
-Version = 2
+Version = 3
 Files = GilTracker.lua
 Enabled = 1
 Dependencies = minionlib, ffxivminion

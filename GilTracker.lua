@@ -317,7 +317,7 @@ function GilTracker.Draw(event, tick)
                         
                         -- Special display for Session Start entry
                         if (item.isStart) then
-                            GUI:TextColored(0.7, 0.7, 0.7, 1, "Session Started")
+                            GUI:TextColored(0.7, 0.7, 0.7, 1, "Start")
                         else
                             -- Calculate delta from previous entry
                             local delta = 0
