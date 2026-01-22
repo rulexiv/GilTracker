@@ -69,7 +69,7 @@ function GilTracker.Reset()
         GilTracker.prevGil = currentGil
         
         -- Reset History
-        GilTracker.history = { { time = os.time(), profit = 0 } }
+        GilTracker.history = { { time = os.time(), gil = currentGil, isStart = true } }
         GilTracker.lastRecordedHour = tonumber(os.date("%H"))
         GilTracker.historyUpdatePending = false
         
@@ -140,7 +140,7 @@ function GilTracker.UpdateData()
          GilTracker.lastRecordedHour = currentHour
          -- Init history if empty
          if (#GilTracker.history == 0) then
-             table.insert(GilTracker.history, { time = now, profit = diff })
+             table.insert(GilTracker.history, { time = now, gil = GilTracker.currentGil, isStart = true })
          end
     end
 
@@ -153,7 +153,7 @@ function GilTracker.UpdateData()
         end
         
         if (now >= GilTracker.historyUpdateTarget) then
-            table.insert(GilTracker.history, { time = now, profit = diff })
+            table.insert(GilTracker.history, { time = now, gil = GilTracker.currentGil })
             if (#GilTracker.history > GilTracker.historyLimit + 1) then -- Keep one extra for delta calc
                 table.remove(GilTracker.history, 1)
             end
@@ -300,7 +300,7 @@ function GilTracker.Draw(event, tick)
                 -- Volatility (Swapped Up/Down)
                 -- Volatility (Swapped: Sales/Green, Expenses/Pink)
                 GUI:Text("Total Income:")    GUI:SameLine(colWidth) GUI:TextColored(0.4, 1, 0.4, 1, GilTracker.FormatNumber(GilTracker.stats.totalIncome))
-                GUI:Text("Total Outgo:")  GUI:SameLine(colWidth) GUI:TextColored(1.0, 0.4, 0.7, 1, GilTracker.FormatNumber(GilTracker.stats.totalExpense))
+                GUI:Text("Total Expense:")  GUI:SameLine(colWidth) GUI:TextColored(1.0, 0.4, 0.7, 1, GilTracker.FormatNumber(GilTracker.stats.totalExpense))
                 
                 GUI:Separator()
                 
@@ -311,27 +311,24 @@ function GilTracker.Draw(event, tick)
                     local start = math.max(1, count - 11) -- Show last 12
                     for i = count, start, -1 do
                         local item = GilTracker.history[i]
-                        local currentVal = item.profit
-                        local prevVal = 0
-                        
-                        -- Calculate delta from previous entry if available
-                        if (i > 1) then
-                            prevVal = GilTracker.history[i-1].profit
-                        end
-                        
-                        local delta = currentVal - prevVal
-                        
-                        -- Skip printing the very first initialization entry (usually 0 profit) if it's the only one
-                        -- or handle it gracefully. 
-                        
-                        local prefix = (delta > 0 and "+") or ""
-                        local color = (delta > 0 and {0.4, 1, 0.4, 1}) or (delta < 0 and {1.0, 0.4, 0.7, 1}) or {1,1,1,1}
-                        
                         local timeStr = os.date("%H:%M", item.time)
-                        
                         GUI:Text(timeStr)
                         GUI:SameLine(colWidth)
-                        GUI:TextColored(color[1], color[2], color[3], color[4], prefix .. GilTracker.FormatNumber(delta))
+                        
+                        -- Special display for Session Start entry
+                        if (item.isStart) then
+                            GUI:TextColored(0.7, 0.7, 0.7, 1, "Session Start")
+                        else
+                            -- Calculate delta from previous entry
+                            local delta = 0
+                            if (i > 1) then
+                                delta = item.gil - GilTracker.history[i-1].gil
+                            end
+                            
+                            local prefix = (delta > 0 and "+") or ""
+                            local color = (delta > 0 and {0.4, 1, 0.4, 1}) or (delta < 0 and {1.0, 0.4, 0.7, 1}) or {1,1,1,1}
+                            GUI:TextColored(color[1], color[2], color[3], color[4], prefix .. GilTracker.FormatNumber(delta))
+                        end
                     end
                 else
                     GUI:Text("No history data yet...")
