@@ -282,7 +282,7 @@ function GilTracker.Draw(event, tick)
                 local colWidth = 115 -- Width for tight right alignment
 
                 -- Session Stats
-                GUI:Text("Session Start:") GUI:SameLine(colWidth) GUI:Text(GilTracker.FormatNumber(GilTracker.startGil))
+                GUI:Text("Starting Gil:") GUI:SameLine(colWidth) GUI:Text(GilTracker.FormatNumber(GilTracker.startGil))
                 GUI:Text("Current Gil:")   GUI:SameLine(colWidth) GUI:Text(GilTracker.cache.current)
                 GUI:Text("Total Profit:")  GUI:SameLine(colWidth) 
                 if (d > 0) then GUI:TextColored(0.4, 1, 0.4, 1, GilTracker.cache.change)
@@ -317,7 +317,7 @@ function GilTracker.Draw(event, tick)
                         
                         -- Special display for Session Start entry
                         if (item.isStart) then
-                            GUI:TextColored(0.7, 0.7, 0.7, 1, "Session Start")
+                            GUI:TextColored(0.7, 0.7, 0.7, 1, "Session Started")
                         else
                             -- Calculate delta from previous entry
                             local delta = 0
